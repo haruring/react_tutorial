@@ -8,6 +8,14 @@ function Square({ value, onSquareClick }) {
   );
 }
 
+function GameList({ move, jumpTo, description, currentMove }) {
+  if (move === currentMove ) {
+    return description;
+  } else {
+    return <button onClick={() => jumpTo(move)}>{description}</button>;
+  }
+}
+
 function Board({ xIsNext, squares, onPlay }) {
   function handleClick(i) {
     if (calculateWinner(squares) || squares[i]) return; // すでに埋まっている場合や勝敗が決まっている場合は何もしない
@@ -70,14 +78,19 @@ export default function Game() {
   const moves = history.map((squares, move) => {
     let description;
     if (move > 0) {
-      description = `${move}手目`;
+      description = `Go to move #${move}`;
     } else {
-      description = `ゲーム開始！`;
+      description = `Go to game start`;
     }
 
     return (
       <li key={move}>
-        <button onClick={() => jumpTo(move)}>{description}</button>
+        <GameList
+          description={description}
+          move={move}
+          currentMove={currentMove}
+          jumpTo={jumpTo}
+        />
       </li>
     );
   });
