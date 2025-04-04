@@ -1,8 +1,7 @@
 import { useState } from "react";
-
-function Square({ value, onSquareClick }) {
+function Square({ value, onSquareClick, style }) {
   return (
-    <button className="square" onClick={onSquareClick}>
+    <button className={style} onClick={onSquareClick}>
       {value}
     </button>
   );
@@ -18,6 +17,7 @@ function GameList({ move, jumpTo, description, currentMove }) {
 
 function Board({ xIsNext, squares, onPlay }) {
   const boardCol = 3;
+
   function handleClick(i) {
     if (calculateWinner(squares) || squares[i]) return; // すでに埋まっている場合や勝敗が決まっている場合は何もしない
     const nextSquares = squares.slice();
@@ -30,10 +30,15 @@ function Board({ xIsNext, squares, onPlay }) {
     onPlay(nextSquares);
   }
 
-  const winner = calculateWinner(squares);
+  const winnerInfo = calculateWinner(squares);
+  const winner = winnerInfo ? winnerInfo.winner : null;
+  const winningLine = winnerInfo ? winnerInfo.winningLine : [];
   let status;
-  if (winner) {
+  const isDraw = squares.every((square) => square !== null); // 引き分け判定
+  if (winner && !isDraw) {
     status = `Winner: ${winner}`;
+  } else if (isDraw) {
+    status = "Draw!";
   } else {
     status = `Next player: ${xIsNext ? "X" : "O"}`;
   }
@@ -44,13 +49,20 @@ function Board({ xIsNext, squares, onPlay }) {
       {squares.map((_, i) =>
         i % 3 === 0 ? (
           <div key={`row${i}`} className="board-row">
-            {squares.slice(i, i + boardCol).map((_, k) => (
-              <Square
-                key={i + k}
-                value={squares[i + k]}
-                onSquareClick={() => handleClick(i + k)}
-              />
-            ))}
+            {squares.slice(i, i + boardCol).map((_, k) => {
+              const index = i + k;
+              const isWinningSquare = winningLine.includes(index); // 勝ちパターンのマスを取得
+              return (
+                <Square
+                  key={index}
+                  value={squares[index]}
+                  onSquareClick={() => {
+                    handleClick(index);
+                  }}
+                  style={isWinningSquare ? "square winning" : "square"} // 勝ちパターンのマスにクラスを追加
+                />
+              );
+            })}
           </div>
         ) : null
       )}
@@ -128,10 +140,11 @@ function calculateWinner(squares) {
     [0, 4, 8], // 左上から右下斜め一列
     [2, 4, 6], // 右上から左下斜め一列
   ];
+
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return { winner: squares[a], winningLine: [a, b, c] };
     }
   }
   return null;
