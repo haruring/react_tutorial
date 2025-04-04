@@ -30,11 +30,6 @@ function Board({ xIsNext, squares, onPlay }) {
     onPlay(nextSquares);
   }
 
-  console.log(squares);
-  const board = squares.map((square, i) => {
-    <Square value={squares[i]} onSquareClick={() => handleClick(i)} />;
-  });
-
   const winner = calculateWinner(squares);
   let status;
   if (winner) {
@@ -66,6 +61,7 @@ function Board({ xIsNext, squares, onPlay }) {
 export default function Game() {
   const [history, setHistory] = useState([Array(9).fill(null)]);
   const [currentMove, setCurrentMove] = useState(0);
+  const [isAscending, setIsAscending] = useState(true);
   const xIsNext = currentMove % 2 === 0; // 現在の手番を計算
   const currentSquares = history[currentMove];
 
@@ -79,19 +75,25 @@ export default function Game() {
     setCurrentMove(nextMove);
   }
 
-  const moves = history.map((squares, move) => {
+  function handleSort() {
+    setIsAscending(!isAscending);
+  }
+
+  const sortedHistory = isAscending ? history : [...history].reverse();
+  const moves = sortedHistory.map((squares, move) => {
+    const actualMove = isAscending ? move : history.length - 1 - move;
     let description;
-    if (move > 0) {
-      description = `Go to move #${move}`;
+    if (actualMove > 0) {
+      description = `Go to move #${actualMove}`;
     } else {
       description = `Go to game start`;
     }
-
     return (
       <li key={move}>
         <GameList
+          history={history}
           description={description}
-          move={move}
+          move={actualMove}
           currentMove={currentMove}
           jumpTo={jumpTo}
         />
@@ -105,6 +107,9 @@ export default function Game() {
         <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
       </div>
       <div className="game-info">
+        <button type="button" onClick={handleSort}>
+          {isAscending ? "▼" : "▲"}
+        </button>
         <ol>{moves}</ol>
       </div>
     </div>
